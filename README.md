@@ -78,6 +78,7 @@
 ---
 
 ### Скриншот интерфейса
-![Uploading image.png…]()
+![main](https://github.com/user-attachments/assets/93e3183e-8f74-4b8a-94ae-6aa376e157b8)
+
 
 
