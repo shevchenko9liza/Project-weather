@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка погодных условий:)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: url('/static/bg.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            text-align: center;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.6); /* Полупрозрачный фон */
+            padding: 20px;
+            border-radius: 10px;
+            margin: 100px auto;
+            width: 40%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 80%;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #91b3f2;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #6495ed;
+        }
+        label {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверка погодных условий:)</h1>
+        <form method="POST">
+            <label>Место начала:</label><br>
+            <input type="text" name="start_location" placeholder="Введи начальное местоположение" required><br>
+            <label>Место конца:</label><br>
+            <input type="text" name="end_location" placeholder="Введи конечное местоположение" required><br>
+            <button type="submit">Скорее узнай!</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты погоды</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: url('/static/bg.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            text-align: center;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Результаты погоды</h1>
+        <div class="weather-card">
+            <h2>{{ start_location }}</h2>
+            <p>Температура: {{ start_weather.temp }}°C</p>
+            <p>Скорость ветра: {{ start_weather.wind_speed }} км/ч</p>
+            <p>{{ start_msg }}</p>
+        </div>
+        <div class="weather-card">
+            <h2>{{ end_location }}</h2>
+            <p>Температура: {{ end_weather.temp }}°C</p>
+            <p>Скорость ветра: {{ end_weather.wind_speed }} км/ч</p>
+            <p>{{ end_msg }}</p>
+        </div>
+        <a href="{{ url_for('home') }}">Назад</a>
+    </div>
+</body>
+</html>
