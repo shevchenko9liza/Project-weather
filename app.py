@@ -1,4 +1,13 @@
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import (
+    Flask, 
+    request, 
+    render_template, 
+    jsonify, 
+    session, 
+    redirect, 
+    url_for,
+    flash
+)
 import requests
 from dash_app import create_dash_app
 from utils import get_weather_forecast, check_weather_conditions, validate_locations
@@ -35,6 +44,7 @@ def check_bad_weather(temp, wind_speed, rain_prob, humidity):
 
 # Главная страница
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/home', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         locations = request.form.getlist('locations[]')
@@ -45,38 +55,41 @@ def home():
             return redirect(url_for('home'))
 
         try:
-            # Проверка на дубликаты городов
             validate_locations(locations)
-            
             weather_data = []
+            
             for location in locations:
                 try:
+                    coordinates = get_coordinates(location)
                     current_weather = get_weather_data(location)
                     forecast = get_weather_forecast(location, forecast_days)
                     
                     weather_info = {
-                        'name': location,
-                        'temp': current_weather['temp'],
-                        'humidity': current_weather['humidity'],
-                        'wind_speed': current_weather['wind_speed'],
-                        'rain_prob': current_weather['rain_prob'],
+                        'location': location,
+                        'coordinates': coordinates,
+                        'weather': current_weather,
                         'forecast': forecast
                     }
                     
                     is_bad, message = check_bad_weather(
-                        weather_info['temp'],
-                        weather_info['wind_speed'],
-                        weather_info['rain_prob'],
-                        weather_info['humidity']
+                        current_weather['temp'],
+                        current_weather['wind_speed'],
+                        current_weather['rain_prob'],
+                        current_weather['humidity']
                     )
                     
-                    weather_info['message'] = message
-                    weather_info['is_bad'] = is_bad
+                    weather_info['weather']['is_bad'] = is_bad
+                    weather_info['weather']['message'] = message
                     weather_data.append(weather_info)
                     
                 except Exception as e:
                     flash(f"Ошибка при получении данных для {location}: {str(e)}", "error")
                     return redirect(url_for('home'))
+
+            if weather_data:
+                # Сохраняем данные в сессии для использования в Dash
+                session['weather_data'] = weather_data
+                session['forecast_days'] = forecast_days
 
             return render_template('results.html',
                                  locations=weather_data,
@@ -112,6 +125,10 @@ def get_weather_data(location):
         raise Exception(f"Ошибка при получении данных о погоде для {location}")
     except KeyError:
         raise Exception(f"Город {location} не найден")
+    except requests.exceptions.ConnectionError:
+        raise Exception(f"Не удалось подключиться к серверу погоды. Проверьте подключение к интернету.")
+    except requests.exceptions.Timeout:
+        raise Exception(f"Превышено время ожидания ответа от сервера. Попробуйте позже.")
 
 # Страница ошибки
 @app.errorhandler(404)
@@ -121,6 +138,76 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
+
+# Добавим новую функцию для получения координат
+def get_coordinates(location):
+    """
+    Получает координаты для заданного местоположения через OpenWeatherMap Geocoding API
+    """
+    geocoding_url = "http://api.openweathermap.org/geo/1.0/direct"
+    params = {
+        'q': location,
+        'limit': 1,
+        'appid': API_KEY
+    }
+    
+    try:
+        response = requests.get(geocoding_url, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        if not data:
+            raise ValueError(f"Местоположение не найдено: {location}")
+            
+        return {
+            'lat': data[0]['lat'],
+            'lon': data[0]['lon']
+        }
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Ошибка при получении координат для {location}: {str(e)}")
+
+# Маршрут для обработки точек маршрута
+@app.route('/route', methods=['GET', 'POST'])
+def route():
+    if request.method == 'POST':
+        city = request.form.get('city')
+        
+        if 'cities' not in session:
+            session['cities'] = []
+        
+        if city and city not in session['cities']:
+            try:
+                coordinates = get_coordinates(city)
+                weather_data = get_weather_data(city)
+                
+                session['cities'].append(city)
+                session.modified = True
+                
+                return jsonify({
+                    'success': True,
+                    'city': city,
+                    'coordinates': coordinates,
+                    'weather': weather_data
+                })
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 400
+        
+        return jsonify({
+            'success': False,
+            'error': 'Город уже добавлен или не указан'
+        }), 400
+    
+    return redirect(url_for('home'))
+
+# Добавить валидацию формы
+@app.route('/', methods=['POST'])
+def validate_form():
+    if not request.form.get('locations[]'):
+        flash('Пожалуйста, введите хотя бы один город', 'error')
+        return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)

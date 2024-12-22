@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Проверка погодных условий</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" 
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin=""
+            defer></script>
 </head>
 <body>
     <div class="container">
@@ -19,28 +27,45 @@
             {% endif %}
         {% endwith %}
         
-        <form method="POST" id="route-form">
+        <form method="POST" action="{{ url_for('home') }}">
             <div id="locations-container">
                 <div class="location-input">
-                    <label>Место начала:</label>
-                    <input type="text" name="locations[]" required>
+                    <input type="text" name="locations[]" required placeholder="Введите город">
                 </div>
             </div>
             
-            <button type="button" id="add-location">Добавить точку маршрута</button>
+            <div class="forecast-options">
+                <label for="forecast-days">Прогноз на:</label>
+                <select name="forecast-days" id="forecast-days">
+                    <option value="1">1 день</option>
+                    <option value="3">3 дня</option>
+                    <option value="5">5 дней</option>
+                </select>
+            </div>
+            
+            <button type="button" onclick="addLocation()">Добавить город</button>
             <button type="submit">Получить прогноз</button>
         </form>
-        
-        <div class="forecast-options">
-            <label>Прогноз на:</label>
-            <select name="forecast-days">
-                <option value="1">1 день</option>
-                <option value="3">3 дня</option>
-                <option value="5">5 дней</option>
-            </select>
+
+        <div class="tooltip">
+            <i class="fas fa-info-circle"></i>
+            <span class="tooltiptext">Добавьте промежуточные точки маршрута для более детального прогноза</span>
         </div>
     </div>
     
-    <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+    <script>
+    function addLocation() {
+        const container = document.getElementById('locations-container');
+        const newLocation = document.createElement('div');
+        newLocation.className = 'location-input';
+        newLocation.innerHTML = `
+            <input type="text" name="locations[]" required placeholder="Введите город">
+            <button type="button" onclick="this.parentElement.remove()" class="remove-location">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(newLocation);
+    }
+    </script>
 </body>
 </html>
